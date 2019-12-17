@@ -3,8 +3,7 @@
 //  MSE760
 //
 //  Created by Carter Francis on 9/6/18.
-//  Copyright © 2018 Carter Francis. All rights reserved.
-//
+// 
 #include <math.h>
 #include <stdio.h>
 
@@ -14,10 +13,13 @@
 int createFCC (int numCells, double UnitCell, double X[], double Y[], double Z[])
 {
     int count = 0;
-    
-    for (int i=0; i < numCells; i=i+1) {
-        for (int j = 0; j < numCells;j=j+1){
-            for (int k=0; k < numCells; k=k+1) {
+    int i;
+    int j;
+    int k;
+
+    for (i=0; i < numCells; i=i+1) {
+        for (j = 0; j < numCells;j=j+1){
+            for (k=0; k < numCells; k=k+1) {
                 
                 X[count] = i*1.0*UnitCell;
                 printf("%g \n", X[count]);
@@ -47,10 +49,12 @@ double calculate_Potential(double X[],double Y[], double Z[] , double energy[],i
     double dist=0;
     double energySum =0;
     //double cutoff = .2;
-    for (int i=0; i <numAtoms-1; i=i+1){
+    int i;
+    int j;
+    for (i=0; i <numAtoms-1; i=i+1){
         //determining atoms within some cutoff
         double energyHolder =0;
-        for(int j=i+1; j <numAtoms; j=j+1){
+        for(j=i+1; j <numAtoms; j=j+1){
             double difX =(X[i] - X[j]);
             double difY =(Y[i] - Y[j]);
             double difZ =(Z[i] - Z[j]);
@@ -89,8 +93,10 @@ double calculate_Potential(double X[],double Y[], double Z[] , double energy[],i
 
 int main() {
     double energyArray[48];
-    FILE *out_energy_file = fopen("/Users/shaw/Shaw/MSE760/Out/energiesNonPeriodic.txt", "w");
-    for (int a=0; a<15; a=a+1){
+    FILE *out_energy_file = fopen("./out/energiesNonPeriodic.txt", "w");//make sure there
+	//is a out directory created.
+    int a;
+    for (a=0; a<15; a=a+1){
         double uCell = 5.26;// in angstroms
         int nCells = a+1;
         double epsilon = 0.0104;
@@ -109,7 +115,7 @@ int main() {
         double energy = calculate_Potential(X, Y, Z, en, nAtoms,Length);
         double energyPerAtom= (energy/nAtoms)*epsilon;
         char buf[0x100];
-        snprintf(buf, sizeof(buf), "/Users/shaw/Shaw/MSE760/Out/%i.txt",a);
+        snprintf(buf, sizeof(buf), "./out/%i.txt",a);
         FILE *out_file = fopen(buf, "w"); // write only
         for (int i=0; i<nAtoms;i++)
         {

@@ -89,7 +89,7 @@ double calculate_Potential(double X[],double Y[], double Z[] , double energy[],i
 
 int main() {
     double energyArray[48];
-    FILE *out_energy_file = fopen("/Users/shaw/Shaw/MSE760/Out/energiesNonPeriodic.txt", "w");
+    FILE *out_energy_file = fopen(getcwd(), "w");
     for (int a=0; a<15; a=a+1){
         double uCell = 5.26;// in angstroms
         int nCells = a+1;
