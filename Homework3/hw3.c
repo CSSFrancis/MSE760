@@ -6,7 +6,9 @@
 //  Copyright © 2018 Carter Francis. All rights reserved.
 //
 
-#include "homework2.h"
+#include "hw3.h"
+#include <unistd.h>
+
 int main() {
     //initalizing varibles
     int a=4;
@@ -25,7 +27,7 @@ int main() {
     createFCC(nCells, uCell, X, Y, Z);
     double en [nAtoms-1];
     calculate_Potential(X, Y, Z, en, nAtoms,Length);
-    FILE *out_energy_file = fopen("/Users/shaw/Shaw/MSE760/Out/energiesNonPeriodic.txt", "w");
+    FILE *out_energy_file = fopen("/home/carter/CLionProjects/MSE760/Homework3/out/energiesNonPeriodic.txt", "w");
     
     for (int l=0; l<timesteps; l++)
     {
@@ -33,7 +35,7 @@ int main() {
         fprintf(out_energy_file, "Step: %i, %g ev/atom \n",l, EStep[l]);
     }
     char buf[0x100];
-    snprintf(buf, sizeof(buf), "/Users/shaw/Shaw/MSE760/Out/%i.txt",a);
+    snprintf(buf, sizeof(buf), "/home/carter/CLionProjects/MSE760/Homework3/out/%i.txt",a);
 
 
     return 1;

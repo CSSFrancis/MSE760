@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
 
 //Building a FFC Unit cell in reduced units
 int createFCC (int numCells, double UnitCell, double X[], double Y[], double Z[])
