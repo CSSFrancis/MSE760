@@ -20,7 +20,7 @@
 //
 #include <math.h>
 #include <stdio.h>
-#include "hw2Extented.h"
+#include "hw2Extended.h"
 #include <time.h>
 #include <unistd.h>
 
@@ -44,15 +44,16 @@ int main() {
     double yVelocity[nAtoms];
     double zVelocity[nAtoms];
     double kinE;
-    int timesteps =400;
     double timestep =0.01;
+    int timesteps =20/timestep;
     //Temp in reduced units
-    double initialTemp = 2.4857684495; // 300K
-    //double initialTemp = 4.14293; //500K
+    //double initialTemp = 2.4857684495; // 300K
+    double initialTemp = 4.14293; //500K
     //double initialTemp = 0; //0K
     double EStep[timesteps];
     double PEStep[timesteps];
     double KEStep[timesteps];
+    double TempStep[timesteps];
     double T;
 
     double Length = uCell*nCells/2;
@@ -72,6 +73,7 @@ int main() {
         double KE;
         double T_during = calculateTemperature(xVelocity, yVelocity, zVelocity, nAtoms);
         printf("%g  ",T_during*epsilon/kb);
+        TempStep[i]=T_during*epsilon/kb;
         energy = velocity_verlet(X, Y, Z, Xforce, Yforce, Zforce, xVelocity, yVelocity, zVelocity, en, nAtoms, timestep, Length, &PE,&KE);
         EStep[i] = (energy/nAtoms)*epsilon;
         printf(" %g ", (KE/nAtoms)*epsilon);
@@ -82,28 +84,26 @@ int main() {
 
     }
     double T_f= calculateTemperature(xVelocity, yVelocity, zVelocity, nAtoms);
-    FILE *out_energy_file = fopen("./energiesNonPeriodic2.txt", "w");
-    fprintf(out_energy_file, "TotalE, KinE, PotE \n");
+    FILE *out_energy_file = fopen("../Homework2/out/energies(,001).txt", "w");
+    fprintf(out_energy_file, "Step, TotalE, KinE(ev/atom), PotE(ev/at), Temp(K)\n");
     for (int l=0; l<timesteps; l++)
     {
         double e =(2*KEStep[l])+PEStep[l];
-        fprintf(out_energy_file, "Step: %i, %g ,%g, %g ev/atoms \n",l, e ,KEStep[l], PEStep[l]);
-        fprintf(out_energy_file,"%g \n",KEStep[l]);
+        fprintf(out_energy_file, "%i, %g ,%g, %g, %g\n",l, e ,KEStep[l], PEStep[l], TempStep[l]);
     }
-    char buf[0x100];
-    snprintf(buf, sizeof(buf), "./%i.txt",a);
-    FILE *out_file = fopen(buf, "w"); // write only
+    FILE *out_file = fopen( "../Homework2/out/forces.txt", "w"); // write only
     fprintf(out_file, "The system temp is: %g \n", T);
     fprintf(out_file, "The final system temp is: %g \n", T_f);
     int i;
+    fprintf(out_file, "Fx(N),            Fy(N),            Fz(N)\n");
     for (i=0; i<nAtoms;i++)
     {
-        fprintf(out_file, "Fx = %g N,    Fy = %g N,    Fz = %g N\n", ((Xforce[i]*epsilon*1.6*pow(10,-9))/sigma),((Yforce[i]*epsilon*1.6*pow(10,-9))/sigma),((Xforce[i]*epsilon*1.6*pow(10,-9))/sigma));//,xVelocity[i],yVelocity[i],zVelocity[i]);
+        fprintf(out_file, "%g,    %g,    %g\n", ((Xforce[i]*epsilon*1.6*pow(10,-9))/sigma),((Yforce[i]*epsilon*1.6*pow(10,-9))/sigma),((Xforce[i]*epsilon*1.6*pow(10,-9))/sigma));//,xVelocity[i],yVelocity[i],zVelocity[i]);
     }
     int n_bins=1000;
     int pdf[1000-1]= {0};
     int total = pair_distribution_function(X,Y,Z,n_bins,nAtoms,Length,pdf);
-    FILE *pairdf = fopen("./pdf.txt", "w");
+    FILE *pairdf = fopen("../Homework2/out/pdf250K.txt", "w");
     fprintf(pairdf, "Distance, Counts \n");
     double bin_size=(Length/(n_bins-1));
     double volume = 4/3 * 3.1415* pow(Length,3);

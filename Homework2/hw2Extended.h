@@ -1,5 +1,5 @@
-#ifndef MSE760_HW2EXTENTED_H
-#define MSE760_HW2EXTENTED_H
+#ifndef MSE760_HW2EXTENDED_H
+#define MSE760_HW2EXTENDED_H
 
 //
 //  Methods for Homework2. Still need some

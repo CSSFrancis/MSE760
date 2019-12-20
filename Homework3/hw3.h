@@ -41,8 +41,8 @@ int createFCC (int numCells, double UnitCell, double X[], double Y[], double Z[]
     }
     return 0;
 }
-//Calculating Potential
 
+//Calculating Potential
 double calculate_Potential(double X[],double Y[], double Z[], double energy[],int numAtoms, double L)
 {
     //double potential;
@@ -85,7 +85,8 @@ double calculateAtomEnergy(double oX[],double oY[], double oZ[],int rAtom, doubl
         double dX =(oX[i] - X);
         double dY =(oY[i] - Y);
         double dZ =(oZ[i] - Z);
-        //For periodic boundry conditions
+
+        //For periodic boundary conditions
         if (dX > Len){dX = dX-2.0*Len;}
         if (dX <= -Len){dX = dX+2.0*Len;}
         if (dY > Len){dY = dY-2.0*Len;}
@@ -98,23 +99,37 @@ double calculateAtomEnergy(double oX[],double oY[], double oZ[],int rAtom, doubl
     return e;
 }
 
-// Mote Carlo Step.....
-double monteCarloStep(double X[],double Y[], double Z[], double T, int natoms,double stepSize,double L)
+// One MonteCarlo move.  Takes a random atom and randomly displaces it. The uses calculateAtomEnergy and determines
+// the probability the move will be made.  It then takes another random number and accepts or denys the move.
+
+double monteCarloStep(double X[],double Y[], double Z[], double T, int natoms, double stepSize, double L)
 {
-    srand (time(NULL));
+    double kb=0.000086173;
     //pick a random atom from all of the atoms
     int randomAtom = (rand() % natoms);
-    double oldX = X[randomAtom];
-    double oldY = Y[randomAtom];
-    double oldZ = Z[randomAtom];
-    double deltaX =oldX*((rand()-0.5)*stepSize);
-    double deltaY =oldY*((rand()-0.5)*stepSize);
-    double deltaZ =oldZ*((rand()-0.5)*stepSize);
+    // Old positions
+    double oldX = X[randomAtom]; double oldY = Y[randomAtom]; double oldZ = Z[randomAtom];
+    // pick new positions from random point in a sphere
+    //double d; double dx; double dy; double dz;
+    //do {
+    //    double dx = rand()*2.0 -1.0; double dy = rand()*2 - 1.0; double dz = rand()*2.0 - 1.0;
+    //    d = dx*dx + dy*dy + dz*dz;
+    //} while(d > 1);
+    double rmax = RAND_MAX;
+    double dx = rand()/ rmax -0.5;double dy = rand()/rmax -0.5;double dz = rand()/rmax-0.5;
+    //printf("%g,%g,%g",dx,dy,dz);
+    double newX = oldX + dx * stepSize;
+    double newY = oldY + dy * stepSize;
+    double newZ = oldZ + dz * stepSize;
     double originalE = calculateAtomEnergy(X, Y, Z, randomAtom, oldX, oldY, oldZ, natoms, L);
-    double newE = calculateAtomEnergy(X, Y, Z, randomAtom, deltaX, deltaY, deltaZ, natoms, L);
-    double deltaE = newE-originalE;
-    
-    return deltaE;
+    double newE = calculateAtomEnergy(X, Y, Z, randomAtom, newX, newY, newZ, natoms, L);
+    double prob = exp(-(newE-originalE)/(kb*T));
+    if (prob> 1 || prob >rand()/rmax)
+    {
+        X[randomAtom]=newX;Y[randomAtom]=newY;Z[randomAtom]=newZ;
+
+    }
+    return (prob> 1 || prob >rand()/rmax);
 }
 
 
