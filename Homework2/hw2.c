@@ -26,7 +26,6 @@
 
 int main() {
     double energyArray[48];
-
     int a=4;
     double sigma = 3.4;
     double uCell = 5.7/sigma;// in angstroms
@@ -61,10 +60,10 @@ int main() {
     assignRandomVelocities(xVelocity, yVelocity, zVelocity, initialTemp,nAtoms);
     T = calculateTemperature(xVelocity, yVelocity, zVelocity, nAtoms);
 
-    //getting the values from aPos
+    // getting the values from aPos
     // basis
     double en [nAtoms-1];
-    calculate_Potential(X, Y, Z, en,Xforce,Yforce,Zforce, nAtoms,Length);
+    calculate_Potential(X, Y, Z, en,Xforce, Yforce, Zforce, nAtoms, Length);
     printf("Temperature, TotalKE,AverageKE, step\n");
     for (int i=0; i<timesteps; i++)
     {
