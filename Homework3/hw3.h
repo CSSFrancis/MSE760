@@ -79,7 +79,7 @@ double calculate_all_atom_energy(double X[],double Y[], double Z[], double energ
             double difX =(X[i] - X[j]);
             double difY =(Y[i] - Y[j]);
             double difZ =(Z[i] - Z[j]);
-            
+
             // For periodic boundary conditions
             if (difX > L){difX = difX-2.0*L;}
             if (difX <= -L){difX = difX+2.0*L;}
