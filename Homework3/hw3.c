@@ -25,26 +25,23 @@ int main() {
     // Positions of the atoms and energy of each atom
     double X[nAtoms]; double Y[nAtoms]; double Z[nAtoms]; double E[nAtoms];
     int timesteps = 60000;
-    double stepSize =.2;
+    double stepSize = 0.2;
     double T = 2.0;
-    double Length = uCell * nCells / 2;
-    double cutoff= 2.5; // 2.5 Sigma in real units
+    double Length = uCell * nCells / 2.0;
+    double cutoff= 2.5; // 2.5 Sigma in real units.  Probably about 3 or so atoms away.
     // Initializing simulation
     createFCC(nCells, uCell, X, Y, Z);
-    double en [nAtoms - 1];
-    // Calculate the energy of every single atom.
-    calculate_all_atom_energy(X, Y, Z, en, nAtoms,Length);
     FILE *out_energy_file = fopen("../Homework3/out/energies.txt", "w");
     double numChanged = 0;
     for (int l=0; l<timesteps; l++)
     {
         numChanged += monteCarloStep(X, Y, Z, T, nAtoms, stepSize,Length, cutoff);
         if (l%5==0){
-            double energySum = calculate_all_atom_energy(X, Y, Z, en ,nAtoms,Length);
-            printf( "Energy: %g\n", (energySum/nAtoms)*epsilon);
-            fprintf(out_energy_file, "%g\n", (energySum/nAtoms)*epsilon);
+            double vir = calc_press(X, Y, Z,nAtoms,Length);
+            printf( "Pressure: %g  \n",(density/T) *vir);
+            fprintf(out_energy_file, " %g\n",  (density/T) *vir);
         }
     }
-    printf("The %g Percent of steps accepted",numChanged/timesteps*100);
+    printf("The %g Percent of steps accepted",numChanged/timesteps*100.0);
     return 1;
 }

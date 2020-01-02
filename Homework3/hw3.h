@@ -42,29 +42,21 @@ int createFCC (int numCells, double UnitCell, double X[], double Y[], double Z[]
     return 0;
 }
 
-double calculate_Potential(double X[],double Y[], double Z[] , double energy[],double xForces[], double yForces[],
-        double zForces[],int numAtoms, double L)
+double calc_press(double X[],double Y[], double Z[] , int numAtoms, double L)
 {
-    //Resetting the Forces back to zero to reassign
-    for (int i = 0; i<numAtoms; i++)
-    {
-        xForces[i]=0.0; yForces[i]=0.0; zForces[i]=0.0;
-    }
     //double potential;
-    double dist=0.0;
-    double energySum =0.0;
+    double dist;
     //double cutoff = .2;
+    double energy = 0;
+    double vir =0.0;
     for (int i=0; i <numAtoms-1; i=i+1){
         //determining atoms within some cutoff
         double energyHolder =0.0;
-        double xForce =0.0;
-        double yForce =0.0;
-        double zForce =0.0;
         for(int j=i+1; j <numAtoms; j=j+1){
             double difX =(X[i] - X[j]);
             double difY =(Y[i] - Y[j]);
             double difZ =(Z[i] - Z[j]);
-            //For periodic boundry conditions
+            //For periodic boundary conditions
             if (difX > L){difX = difX-2.0*L;}
             if (difX <= -L){difX = difX+2.0*L;}
             if (difY > L){difY = difY-2.0*L;}
@@ -73,29 +65,18 @@ double calculate_Potential(double X[],double Y[], double Z[] , double energy[],d
             if (difZ <= -L){difZ = difZ+2.0*L;}
             //calculating the distance from atom i to j
             dist = sqrt(pow(difX,2.0) + pow(difY,2.0) + pow(difZ,2.0));
-            //printf("%g \n", dist);
             // calculating the forces on the particles
             double redDist = dist;
-
-            double a=(48.0/pow(redDist,2.0))*((pow((1.0/redDist),12.0) - 0.5*pow((1.0/redDist),6.0)));
-            xForce= xForce + ((difX)*a);
-            yForce= yForce + ((difY)*a);
-            zForce= zForce + ((difZ)*a);
-            xForces[j] = xForces[j] - (difX*a);
-            yForces[j] = yForces[j] - (difY*a);
-            zForces[j] = zForces[j] - (difZ*a);
+            double a = (48.0/pow(redDist,2.0)) * ((pow((1.0/redDist),12.0) - 0.5 * pow((1.0/redDist),6.0)));
+            vir = vir + difX * difX * a + difY * difY * a + difZ * difZ * a;
             energyHolder = energyHolder + 4.0 * (pow((1/redDist),12) - pow((1/redDist),6));
         }
-        energySum = energySum +energyHolder;
-        xForces[i]=xForces[i] +xForce;
-        yForces[i]=yForces[i] +yForce;
-        zForces[i]=zForces[i] +zForce;
-        energy[i] = energyHolder;
-
+        energy = energy + energyHolder;
     }
-    return energySum;
+    printf("%g\n", energy);
+    vir = vir *(1.0/3.0);
+    return vir;
 }
-
 
 // Calculating the energy of a single atom. Uses some cutoff for calculating the energy
 double calculateAtomEnergy(double X[],double Y[], double Z[], int rAtom, double Xrand, double Yrand,double Zrand,
@@ -159,9 +140,9 @@ double calculate_all_atom_energy(double X[],double Y[], double Z[], double energ
     return energySum;
 }
 
+
 // One MonteCarlo move.  Takes a random atom and randomly displaces it. The uses calculateAtomEnergy and determines
 // the probability the move will be made.  It then takes another random number and accepts or denys the move.
-
 double monteCarloStep(double X[],double Y[], double Z[], double T, int natoms, double stepSize, double L,double cutoff)
 {
     // Pick a random atom from all of the atoms
