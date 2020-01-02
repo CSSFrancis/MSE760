@@ -42,9 +42,64 @@ int createFCC (int numCells, double UnitCell, double X[], double Y[], double Z[]
     return 0;
 }
 
+double calculate_Potential(double X[],double Y[], double Z[] , double energy[],double xForces[], double yForces[],
+        double zForces[],int numAtoms, double L)
+{
+    //Resetting the Forces back to zero to reassign
+    for (int i = 0; i<numAtoms; i++)
+    {
+        xForces[i]=0.0; yForces[i]=0.0; zForces[i]=0.0;
+    }
+    //double potential;
+    double dist=0.0;
+    double energySum =0.0;
+    //double cutoff = .2;
+    for (int i=0; i <numAtoms-1; i=i+1){
+        //determining atoms within some cutoff
+        double energyHolder =0.0;
+        double xForce =0.0;
+        double yForce =0.0;
+        double zForce =0.0;
+        for(int j=i+1; j <numAtoms; j=j+1){
+            double difX =(X[i] - X[j]);
+            double difY =(Y[i] - Y[j]);
+            double difZ =(Z[i] - Z[j]);
+            //For periodic boundry conditions
+            if (difX > L){difX = difX-2.0*L;}
+            if (difX <= -L){difX = difX+2.0*L;}
+            if (difY > L){difY = difY-2.0*L;}
+            if (difY <= -L){difY = difY+2.0*L;}
+            if (difZ > L){difZ = difZ-2.0*L;}
+            if (difZ <= -L){difZ = difZ+2.0*L;}
+            //calculating the distance from atom i to j
+            dist = sqrt(pow(difX,2.0) + pow(difY,2.0) + pow(difZ,2.0));
+            //printf("%g \n", dist);
+            // calculating the forces on the particles
+            double redDist = dist;
+
+            double a=(48.0/pow(redDist,2.0))*((pow((1.0/redDist),12.0) - 0.5*pow((1.0/redDist),6.0)));
+            xForce= xForce + ((difX)*a);
+            yForce= yForce + ((difY)*a);
+            zForce= zForce + ((difZ)*a);
+            xForces[j] = xForces[j] - (difX*a);
+            yForces[j] = yForces[j] - (difY*a);
+            zForces[j] = zForces[j] - (difZ*a);
+            energyHolder = energyHolder + 4.0 * (pow((1/redDist),12) - pow((1/redDist),6));
+        }
+        energySum = energySum +energyHolder;
+        xForces[i]=xForces[i] +xForce;
+        yForces[i]=yForces[i] +yForce;
+        zForces[i]=zForces[i] +zForce;
+        energy[i] = energyHolder;
+
+    }
+    return energySum;
+}
+
+
 // Calculating the energy of a single atom. Uses some cutoff for calculating the energy
 double calculateAtomEnergy(double X[],double Y[], double Z[], int rAtom, double Xrand, double Yrand,double Zrand,
-        int natom, double Len, double cutoff)
+        int natom, double Len)
 {
     double e = 0.0; // Initializing the energu
     double d; // initializing the distance
@@ -60,13 +115,14 @@ double calculateAtomEnergy(double X[],double Y[], double Z[], int rAtom, double 
         if (dZ > Len){dZ = dZ-2.0*Len;}
         if (dZ <= -Len){dZ = dZ+2.0*Len;}
         d = sqrt(pow(dX, 2.0) + pow(dY,2.0) + pow(dZ ,2.0)); // Calculating the distance
-        if (d < cutoff){e = e+ 4.0 * (pow((1/d),12) - pow((1/d),6));} // Only calculate potential energy if inside some cutoff
+        e = e + 4.0 * (pow((1/d),12) - pow((1/d),6));
+        //if (d < cutoff){e = e + 4.0 * (pow((1/d),12) - pow((1/d),6));} // Only calculate potential energy if inside some cutoff
     }
     return e;
 }
 
 // Calculating the energy of a every atom. Still needs a reasonable cutoff to speed up the calculations...
-double calculate_all_atom_energy(double X[],double Y[], double Z[], double energy[], int numAtoms, double L, double cutoff)
+double calculate_all_atom_energy(double X[],double Y[], double Z[], double energy[], int numAtoms, double L)
 {
     double dist;
     double energySum =0.0;
@@ -74,12 +130,16 @@ double calculate_all_atom_energy(double X[],double Y[], double Z[], double energ
     for (int i=0; i <numAtoms-1; i=i+1){
         //determining atoms within some cutoff
         double energyHolder =0.0;
+        double xi= X[i];
+        double yi= Y[i];
+        double zi= Z[i];
+
         for(int j=0; j <numAtoms && j!=i; j=j+1){
             // Calculating the distance from atom i to atom j
-            double difX =(X[i] - X[j]);
-            double difY =(Y[i] - Y[j]);
-            double difZ =(Z[i] - Z[j]);
-
+            double difX =(xi - X[j]);
+            double difY =(yi - Y[j]);
+            double difZ =(zi - Z[j]);
+            
             // For periodic boundary conditions
             if (difX > L){difX = difX-2.0*L;}
             if (difX <= -L){difX = difX+2.0*L;}
@@ -89,7 +149,8 @@ double calculate_all_atom_energy(double X[],double Y[], double Z[], double energ
             if (difZ <= -L){difZ = difZ+2.0*L;}
             //calculating the distance from atom i to j
             dist = sqrt(pow(difX,2.0) + pow(difY,2.0) + pow(difZ,2.0));
-            if (dist < cutoff) {energyHolder = energyHolder + 4.0 * (pow((1/dist),12) - pow((1/dist),6));}
+            //if (dist < cutoff) {energyHolder = energyHolder + 4.0 * (pow((1/dist),12) - pow((1/dist),6));}
+            energyHolder = energyHolder + 4.0 * (pow((1/dist),12) - pow((1/dist),6));
         }
         energySum = energySum + energyHolder;
         energy[i] = energyHolder;
@@ -101,7 +162,7 @@ double calculate_all_atom_energy(double X[],double Y[], double Z[], double energ
 // One MonteCarlo move.  Takes a random atom and randomly displaces it. The uses calculateAtomEnergy and determines
 // the probability the move will be made.  It then takes another random number and accepts or denys the move.
 
-double monteCarloStep(double X[],double Y[], double Z[], double T, int natoms, double stepSize, double L, double energy[],double cutoff)
+double monteCarloStep(double X[],double Y[], double Z[], double T, int natoms, double stepSize, double L,double cutoff)
 {
     // Pick a random atom from all of the atoms
     int randomAtom = (rand() % natoms);
@@ -121,14 +182,18 @@ double monteCarloStep(double X[],double Y[], double Z[], double T, int natoms, d
     if (newZ > L){newZ = newZ - 2.0 * L;}
     if (newZ <= -L){newZ = newZ + 2.0 * L;}
     // New energy.  Just calculating the energy for the one atom that changed position.
-    double newE = calculateAtomEnergy(X, Y, Z, randomAtom, newX, newY, newZ, natoms, L,cutoff);
-    double prob = exp(-(newE-energy[randomAtom])/T);
-    if (prob> 1 || prob > rand()/rmax)
+    double oldE = calculateAtomEnergy(X,Y,Z, randomAtom,X[randomAtom],Y[randomAtom], Z[randomAtom], natoms, L);
+    double newE = calculateAtomEnergy(X, Y, Z, randomAtom, newX, newY, newZ, natoms, L);
+    double prob = exp(-2*(newE-oldE)/T);
+    int accepted = (prob>1 || prob > rand()/rmax);
+    printf("Prob: %g , OldE: %g NewE: %g, Accepted: %i \n",prob, oldE, newE, accepted);
+    //if (prob>100){printf("Prob: %g , OldE: %g NewE: %g \n",prob, oldE, newE);}
+
+    if (accepted==1)
     {
-        energy[randomAtom] = newE;
         X[randomAtom]=newX;Y[randomAtom]=newY;Z[randomAtom]=newZ;
     }
-    return (prob > 1 || prob >rand()/rmax);
+    return accepted;
 }
 
 
